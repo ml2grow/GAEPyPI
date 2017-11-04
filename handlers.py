@@ -163,7 +163,7 @@ class PackageList(BaseHandler):
         versions.sort()
 
         if len(versions) == 0:
-            self.write404(self)
+            self.write404()
             return
 
         self.response.write('<html><body>\n')
@@ -180,12 +180,14 @@ class PackageDownload(BaseHandler):
     def get(self, name, version, _):
         path = self.get_package_path(name, version, want_file=True)
 
-        self.response.content_type = 'application/octet-stream'
-        self.response.headers.add('Content-Disposition', 'attachment; filename={0}'.format(path.split('/')[-1]))
-
-        gcs_file = gcs.open(path)
-        self.response.write(gcs_file.read())
-        gcs_file.close()
+        try:
+            gcs_file = gcs.open(path)
+            self.response.content_type = 'application/octet-stream'
+            self.response.headers.add('Content-Disposition', 'attachment; filename={0}'.format(path.split('/')[-1]))
+            self.response.write(gcs_file.read())
+            gcs_file.close()
+        except gcs.NotFoundError:
+            self.write404()
 
 
 __all__ = [cls.__name__ for cls in BaseHandler.__subclasses__()]
