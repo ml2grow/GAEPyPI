@@ -56,5 +56,5 @@ python setup.py sdist upload -r local
 # Installing from the package index
 When installing a package (e.g. dummy), specify the url to the package index:
 ```
-pip install -i http://username:password@project.appspot.com/pypi dummy
+pip install -i https://username:password@project.appspot.com/pypi dummy
 ```
