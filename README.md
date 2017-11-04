@@ -1,5 +1,5 @@
 # Private package index on Google App Engine
-Intended to be used for companies or organizations that need a private PyPi. Originally based on [https://github.com/steiza/simplepypi](simplepypi), however this solution requires a compute engine instance which is quite expensive for the task.
+Intended to be used for companies or organizations that need a private PyPi. Originally based on [simplepypi](https://github.com/steiza/simplepypi), however this solution requires a compute engine instance which is quite expensive for the task.
 
 This application runs on Google App Engine (and now uses webapp2 instead of tornado) and stores the uploaded packages on Google Cloud Storage. Like the original package it supports
 1. Allows uploading of packages
@@ -21,7 +21,7 @@ pip install -t libs -r requirements-app.txt
 Next, have a look at config.json, you can set up multiple accounts for the http auth. The passwords are assumed to be hashed with sha1, you can obtain the hash as follows:
 ```python
 from webapp2_extras import security
-security.hash_password('mypassword', method='sha1')
+security.hash_password('password', method='sha1')
 ```
 Now, you are ready to deploy to google app engine. Depending on how you set up your projects, this may require adjusting app.yaml, or setting the right project for gcloud. Then:
 ```
