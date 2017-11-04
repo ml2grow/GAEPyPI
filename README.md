@@ -1,7 +1,7 @@
 # Private package index on Google App Engine
 Intended to be used for companies or organizations that need a private PyPi. Originally based on [https://github.com/steiza/simplepypi](simplepypi), however this solution requires a compute engine instance which is quite expensive for the task.
 
-This application runs on Google App Engine and stores the uploaded packages on Google Cloud Storage. Like the original package it supports
+This application runs on Google App Engine (and now uses webapp2 instead of tornado) and stores the uploaded packages on Google Cloud Storage. Like the original package it supports
 1. Allows uploading of packages
 2. Downloading by package (or package and version)
 3. A / page that is navigatable with a web browser
@@ -56,5 +56,5 @@ python setup.py sdist upload -r local
 # Installing from the package index
 When installing a package (e.g. dummy), specify the url to the package index:
 ```
-pip install -i http://username:password@localhost:8080/pypi dummy
+pip install -i http://username:password@project.appspot.com/pypi dummy
 ```
