@@ -79,7 +79,7 @@ class IndexHandler(BaseHandler):
 
             # Write file in bucket
             write_retry_params = gcs.RetryParams(backoff_factor=1.1)
-            gcs_file = gcs.open(path, 'w', options={}, retry_params=write_retry_params)
+            gcs_file = gcs.open(path, 'w', options={'x-goog-acl': 'project-private'}, retry_params=write_retry_params)
             gcs_file.write(content)
             gcs_file.close()
 
