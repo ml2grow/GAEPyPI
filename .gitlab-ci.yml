@@ -23,7 +23,8 @@ deploy_production:
     - gcloud auth activate-service-account --key-file /tmp/$CI_PIPELINE_ID.json
     - echo $ML2GROW_HTTP_AUTH > config.json
     - cat config.json
-    - gcloud --quiet --project $PROJECT_ID_PRODUCTION app deploy app.yaml
+    - ls
+    - gcloud --verbosity=info --quiet --project $PROJECT_ID_PRODUCTION app deploy app.yaml
   after_script:
     - rm /tmp/$CI_PIPELINE_ID.json
 
