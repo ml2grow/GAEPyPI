@@ -20,6 +20,9 @@ from webapp2_extras import security
 
 
 def basic_auth(func):
+    """
+    Decorator to require HTTP auth for request handler
+    """
     def callf(handler, *args, **kwargs):
         auth_header = handler.request.headers.get('Authorization')
         if auth_header is None:

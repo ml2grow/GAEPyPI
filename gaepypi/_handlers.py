@@ -16,6 +16,7 @@
 
 from .storage import GCStorage
 from .package import Package, PackageIndex
+from .exceptions import GAEPyPIError
 
 import os
 import webapp2
@@ -25,6 +26,9 @@ from google.appengine.api import app_identity
 
 
 class BaseHandler(webapp2.RequestHandler):
+    """
+    Basic handler class for our GAE webapp2 application
+    """
 
     def write_page(self, body):
         self.response.write('<html><body>{}</body></html>'.format(body))
@@ -40,6 +44,9 @@ class BaseHandler(webapp2.RequestHandler):
 
 # Handlers
 class IndexHandler(BaseHandler):
+    """
+    Handles /
+    """
 
     @basic_auth
     def get(self):
@@ -55,11 +62,18 @@ class IndexHandler(BaseHandler):
         filename = upload.filename
 
         if name and version and content and action == 'file_upload':
-            package = Package(self.get_storage(), name, version)
-            package.put_file(filename, content)
+            try:
+                package = Package(self.get_storage(), name, version)
+                package.put_file(filename, content)
+            except GAEPyPIError as e:
+                self.response.set_status(403)
+                self.write_page('<h1>{0}</h1>'.format(str(e)))
 
 
 class PypiHandler(BaseHandler):
+    """
+    Handles /pypi/
+    """
 
     @basic_auth
     def get(self):
@@ -67,6 +81,9 @@ class PypiHandler(BaseHandler):
 
 
 class PypiPackageHandler(BaseHandler):
+    """
+    Handles /pypi/package
+    """
 
     @basic_auth
     def get(self, package):
@@ -78,7 +95,12 @@ class PypiPackageHandler(BaseHandler):
         self.write_page(index.to_html(full_index=True))
 
 
-class PypiPackageVersionHandler(BaseHandler):
+class PackageVersionHandler(BaseHandler):
+    """
+    Handles
+       - /pypi/package/version
+       - /packages/package/version
+    """
 
     @basic_auth
     def get(self, package, version):
@@ -90,6 +112,9 @@ class PypiPackageVersionHandler(BaseHandler):
 
 
 class PackageBase(BaseHandler):
+    """
+    Handles /packages
+    """
 
     @basic_auth
     def get(self):
@@ -102,6 +127,9 @@ class PackageBase(BaseHandler):
 
 
 class PackageList(BaseHandler):
+    """
+    Handles /packages/package
+    """
 
     @basic_auth
     def get(self, package):
@@ -112,6 +140,9 @@ class PackageList(BaseHandler):
 
 
 class PackageDownload(BaseHandler):
+    """
+    Handles /packages/package/version/filename
+    """
 
     @basic_auth
     def get(self, name, version, filename):

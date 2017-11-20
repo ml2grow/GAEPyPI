@@ -16,6 +16,7 @@
 
 from .package import PackageIndex
 from .templates import __templates__
+from .renderable import Renderable
 
 import six
 from abc import ABCMeta, abstractmethod
@@ -29,40 +30,81 @@ gcs.set_default_retry_params(my_default_retry_params)
 
 
 @six.add_metaclass(ABCMeta)
-class Storage(object):
+class Storage(Renderable):
+    """
+    Storage abstract class, describing the interface assumed by the Package/PackageIndex classes
+    """
 
     @abstractmethod
     def get_packages_path(self):
+        """
+        :return: (string) path to all package folders
+        """
         pass
 
     @abstractmethod
-    def get_package_path(self):
+    def get_package_path(self, package, version=None, filename=None):
+        """
+        Produce the package path
+        :param package: package name
+        :param version: package version
+        :param filename: specific file
+        """
         pass
 
     @abstractmethod
-    def split_path(self):
+    def split_path(self, path):
+        """
+        Break down a path into package/version/file (if present)
+        :param path: string
+        :return: dictionary with keys package, version and filename
+        """
         pass
 
     @abstractmethod
     def ls(self, path, dir_only=False):
+        """
+        list all nodes below a given path.
+        :param path: scan this path
+        :param dir_only: only include directories
+        :return: iterable
+        """
         pass
 
     @abstractmethod
     def read(self, path):
+        """
+        Read a specific file
+        :param path: path to file
+        :return: file object
+        """
         pass
 
     @abstractmethod
     def write(self, path, content):
+        """
+        Write content to file
+        """
         pass
 
     @abstractmethod
     def file_exists(self, path):
+        """
+        Query if a file exists
+        """
         pass
 
     def empty(self):
+        """
+        Verify if any packages are present in the storage
+        """
         return len(PackageIndex.get_all(self)) == 0
 
     def to_html(self, full_index=True):
+        """
+        Render overview of all packages in storage
+        :param full_index: if true, print all files for all versions. if false, only print package names (once)
+        """
         package_indices = PackageIndex.get_all(self)
         template_file = 'storage-index.html.j2' if not full_index else 'package-index.html.j2'
         template = __templates__.get_template(template_file)
@@ -70,6 +112,9 @@ class Storage(object):
 
 
 class GCStorage(Storage):
+    """
+    Implementation of the Storage abstract class for Google Cloud Storage
+    """
     def __init__(self, bucket, acl='project-private'):
         self.bucket = bucket
         self.acl = acl

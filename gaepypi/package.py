@@ -16,6 +16,7 @@
 
 from .exceptions import GAEPyPIError
 from .templates import __templates__
+from .renderable import Renderable
 
 import six
 from contextlib import contextmanager
@@ -23,7 +24,7 @@ from abc import ABCMeta, abstractmethod
 
 
 @six.add_metaclass(ABCMeta)
-class BucketObject(object):
+class BucketObject(Renderable):
     def __init__(self, storage, *args, **kwargs):
         super(BucketObject, self).__init__(*args, **kwargs)
         self.storage = storage
@@ -32,19 +33,14 @@ class BucketObject(object):
         return storage or self.storage
 
     @abstractmethod
-    def to_html(self):
-        pass
-
-    @abstractmethod
     def exists(self):
-        pass
-
-    @abstractmethod
-    def empty(self):
         pass
 
 
 class Package(BucketObject):
+    """
+    Class representing a Python package (name, version and files)
+    """
 
     def __init__(self, storage, name, version):
         super(Package, self).__init__(storage)
@@ -104,9 +100,16 @@ class Package(BucketObject):
 
 
 class PackageIndex(BucketObject, set):
+    """
+    Class representing a package index (for a name, all versions present in storage)
+    """
 
     @classmethod
     def get_all(cls, storage):
+        """
+        Get all Package indices for a given storage
+        :return: iterable of PackageIndex
+        """
         path = storage.get_packages_path()
         packages = storage.ls(path, dir_only=True)
         return [cls(storage, storage.split_path(package_path)['package']) for package_path in packages]
@@ -137,6 +140,10 @@ class PackageIndex(BucketObject, set):
         return storage.path_exists(package_path)
 
     def add(self, other):
+        """
+        Add version to index
+        :param other: instance of Package, with matching name and distinct version.
+        """
         assert isinstance(other, Package)
         if self.name != other.name:
             raise GAEPyPIError("Package {0} can not be added to {1} (name differs)".format(other, self))
@@ -155,6 +162,10 @@ class PackageIndex(BucketObject, set):
             return template.render({'packages': self})
 
     def get_version(self, version):
+        """
+        Get package of specific version from the index
+        :return: Package object of given version
+        """
         for p in self:
             if p.version == version:
                 return p
