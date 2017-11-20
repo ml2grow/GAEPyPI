@@ -1,0 +1,3 @@
+{% for package in packages | sort %}
+    <a href="/packages/{{ package.name }}/{{ package.version }}">{{ package|string() }}</a><br />
+{% endfor %}

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#
 # GAEPyPi, private package index on Google App Engine
 # Copyright (C) 2017  ML2Grow BVBA
 
@@ -14,31 +16,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-runtime: python27
-api_version: 1
-threadsafe: yes
+import webapp2
+from _handlers import *
 
-handlers:
-- url: /favicon\.ico
-  static_files: favicon.ico
-  upload: favicon\.ico
-
-- url: .*
-  script: gaepypi.app
-
-libraries:
-- name: webapp2
-  version: latest
-- name: jinja2
-  version: latest
-- name: six
-  version: latest
-
-skip_files:
-- ^(.*/)?#.*#$
-- ^(.*/)?.*~$
-- ^(.*/)?.*\.py[co]$
-- ^(.*/)?.*/RCS/.*$
-- ^(.*/)?\..*$
-- ^tests/.*$
-- ^\..*$
+app = webapp2.WSGIApplication([
+    ('/', IndexHandler),
+    ('/pypi/', PypiHandler),
+    ('/pypi/([^/]+)/', PypiPackageHandler),
+    ('/pypi/([^/]+)/([^/]+)', PypiPackageVersionHandler),
+    ('/packages', PackageBase),
+    ('/packages/([^/]+)', PackageList),
+    ('/packages/([^/]+)/([^/]+)', PypiPackageVersionHandler),
+    ('/packages/([^/]+)/([^/]+)/(.+)', PackageDownload)
+], debug=True)

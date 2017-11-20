@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # GAEPyPi, private package index on Google App Engine
 # Copyright (C) 2017  ML2Grow BVBA
 
@@ -16,15 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import webapp2
-from handlers import *
+from .exceptions import GAEPyPIError
+from .package import Package, PackageIndex
+from .storage import Storage, GCStorage
+from .wsgi import app
 
-app = webapp2.WSGIApplication([
-    ('/', IndexHandler),
-    ('/pypi/', PypiHandler),
-    ('/pypi/([^/]*)/', PypiPackageHandler),
-    ('/pypi/([^/]*)/([^/]*)', PypiPackageVersionHandler),
-    ('/packages', PackageBase),
-    ('/packages/([^/]*)', PackageList),
-    ('/packages/([^/]*)/([^/]*)/(.*)', PackageDownload),
-], debug=True)
+from ._version import __version__

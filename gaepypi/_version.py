@@ -14,31 +14,4 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-runtime: python27
-api_version: 1
-threadsafe: yes
-
-handlers:
-- url: /favicon\.ico
-  static_files: favicon.ico
-  upload: favicon\.ico
-
-- url: .*
-  script: gaepypi.app
-
-libraries:
-- name: webapp2
-  version: latest
-- name: jinja2
-  version: latest
-- name: six
-  version: latest
-
-skip_files:
-- ^(.*/)?#.*#$
-- ^(.*/)?.*~$
-- ^(.*/)?.*\.py[co]$
-- ^(.*/)?.*/RCS/.*$
-- ^(.*/)?\..*$
-- ^tests/.*$
-- ^\..*$
+__version__ = '0.0.1'
