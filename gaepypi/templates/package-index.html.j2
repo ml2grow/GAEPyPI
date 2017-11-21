@@ -1,0 +1,7 @@
+{% for index in indices | sort %}
+    {% for package in index | sort %}
+        {% for filename in package.files|sort %}
+            <a href="/packages/{{ package.name }}/{{ package.version }}/{{ filename }}">{{ filename }}</a><br />
+        {% endfor %}
+    {% endfor %}
+{% endfor %}
