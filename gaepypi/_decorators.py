@@ -28,7 +28,10 @@ def basic_auth(func):
         if auth_header is None:
             __basic_login(handler)
         else:
-            (username, password) = base64.b64decode(auth_header.split(' ')[1]).split(':')
+            parts = base64.b64decode(auth_header.split(' ')[1]).split(':')
+            username = parts[0]
+            password = ':'.join(parts[1:])
+
             if __basic_lookup(username) == __basic_hash(password):
                 return func(handler, *args, **kwargs)
             else:
