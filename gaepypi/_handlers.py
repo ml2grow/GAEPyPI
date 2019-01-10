@@ -136,6 +136,7 @@ class PackageList(BaseHandler):
         index = PackageIndex(self.get_storage(), package)
         if not index.exists():
             self.write404()
+            return
         self.write_page(index.to_html(full_index=False))
 
 
