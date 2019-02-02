@@ -48,7 +48,7 @@ class IndexHandler(BaseHandler):
     Handles /
     """
 
-    @basic_auth
+    @basic_auth()
     def get(self):
         self.write_page('<a href="/packages">packages</a>')
 
@@ -75,7 +75,7 @@ class PypiHandler(BaseHandler):
     Handles /pypi/
     """
 
-    @basic_auth
+    @basic_auth()
     def get(self):
         self.write_page(self.get_storage().to_html(full_index=True))
 
@@ -85,7 +85,7 @@ class PypiPackageHandler(BaseHandler):
     Handles /pypi/package
     """
 
-    @basic_auth
+    @basic_auth()
     def get(self, package):
         storage = self.get_storage()
         index = PackageIndex(storage, package)
@@ -102,7 +102,7 @@ class PackageVersionHandler(BaseHandler):
        - /packages/package/version
     """
 
-    @basic_auth
+    @basic_auth()
     def get(self, package, version):
         package = Package(self.get_storage(), package, version)
         if not package.exists():
@@ -116,7 +116,7 @@ class PackageBase(BaseHandler):
     Handles /packages
     """
 
-    @basic_auth
+    @basic_auth()
     def get(self):
         storage = self.get_storage()
         if storage.empty():
@@ -131,7 +131,7 @@ class PackageList(BaseHandler):
     Handles /packages/package
     """
 
-    @basic_auth
+    @basic_auth()
     def get(self, package):
         index = PackageIndex(self.get_storage(), package)
         if not index.exists():
@@ -144,7 +144,7 @@ class PackageDownload(BaseHandler):
     Handles /packages/package/version/filename
     """
 
-    @basic_auth
+    @basic_auth()
     def get(self, name, version, filename):
         try:
             package = Package(self.get_storage(), name, version)
