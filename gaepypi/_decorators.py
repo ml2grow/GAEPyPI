@@ -24,8 +24,8 @@ def basic_auth(required_roles=None):
     """
     Decorator to require HTTP auth for request handler
     """
-    def decorator_basic_auth(func, handler):
-        def callf(*args, **kwargs):
+    def decorator_basic_auth(handler):
+        def callf(func, *args, **kwargs):
             auth_header = handler.request.headers.get('Authorization')
             if auth_header is None:
                 __basic_login(handler)
