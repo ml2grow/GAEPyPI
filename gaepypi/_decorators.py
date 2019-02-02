@@ -16,28 +16,40 @@
 
 import base64
 import json
+from functools import wraps
 from webapp2_extras import security
 
 
-def basic_auth(func):
+def basic_auth(required_roles=None):
     """
     Decorator to require HTTP auth for request handler
     """
-    def callf(handler, *args, **kwargs):
-        auth_header = handler.request.headers.get('Authorization')
-        if auth_header is None:
-            __basic_login(handler)
-        else:
-            parts = base64.b64decode(auth_header.split(' ')[1]).split(':')
-            username = parts[0]
-            password = ':'.join(parts[1:])
-
-            if __basic_lookup(username) == __basic_hash(password):
-                return func(handler, *args, **kwargs)
-            else:
+    def decorator_basic_auth(func):
+        @wraps(func)
+        def callf(handler, *args, **kwargs):
+            auth_header = handler.request.headers.get('Authorization')
+            if auth_header is None:
                 __basic_login(handler)
+            else:
+                parts = base64.b64decode(auth_header.split(' ')[1]).split(':')
+                username = parts[0]
+                password = ':'.join(parts[1:])
+                account = __basic_lookup(username)
 
-    return callf
+                # Return 401 Unauthorized if user did not specify credentials or password is mismatched
+                if not account or account["password"] != __basic_hash(password):
+                    return __basic_login(handler)
+
+                # Return 403 Forbidden if user's account does not have any of the required access roles
+                user_roles = account['roles'] if 'roles' in account else []
+                if required_roles and any([(required_role not in user_roles) for required_role in required_roles]):
+                    return __basic_forbidden(handler)
+
+                else:
+                    return func(handler, *args, **kwargs)
+
+        return callf
+    return decorator_basic_auth
 
 
 def __basic_login(handler):
@@ -45,12 +57,16 @@ def __basic_login(handler):
     handler.response.headers['WWW-Authenticate'] = 'Basic realm="Secure Area"'
 
 
+def __basic_forbidden(handler):
+    handler.response.set_status(403, message="Forbidden")
+
+
 def __basic_lookup(username):
     with open('config.json') as data_file:
         config = json.load(data_file)
     for account in config["accounts"]:
         if account['username'] == username:
-            return account['password']
+            return account
 
 
 def __basic_hash(password):

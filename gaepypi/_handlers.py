@@ -52,7 +52,7 @@ class IndexHandler(BaseHandler):
     def get(self):
         self.write_page('<a href="/packages">packages</a>')
 
-    @basic_auth
+    @basic_auth(required_roles=['write'])
     def post(self):
         name = self.request.get('name', default_value=None)
         version = self.request.get('version', default_value=None)
