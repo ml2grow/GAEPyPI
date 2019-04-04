@@ -6,7 +6,7 @@ This application runs on Google App Engine (and uses webapp2 instead of tornado)
 2. Downloading by package (or package and version)
 3. A / page that is navigatable with a web browser
 4. /pypi/ listing
-5. Basic ACL through http auth
+5. Basic ACL through http auth with optional account roles (read/write)
 6. Prevent overwriting a package with the same name & version
 
 Unsupported are: 
