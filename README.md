@@ -18,10 +18,22 @@ Before deploying, install the required dependencies to the libs folder:
 pip install -t libs -r requirements-app.txt
 ```
 Next, have a look at config.json, you can set up multiple accounts for the http auth. The passwords are assumed to be hashed with sha1, you can obtain the hash as follows:
+
 ```python
 from webapp2_extras import security
 security.hash_password('password', method='sha1')
 ```
+
+Or by using tools like `openssl` or `shasum`:
+
+```
+openssl
+echo -n "password" | openssl sha1
+
+# shasum
+echo -n "password" | shasum
+```
+
 Now, you are ready to deploy to google app engine. Depending on how you set up your projects, this may require adjusting app.yaml, or setting the right project for gcloud. Then:
 ```
 gcloud app deploy app.yaml
