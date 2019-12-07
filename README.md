@@ -27,7 +27,7 @@ security.hash_password('password', method='sha1')
 Or by using tools like `openssl` or `shasum`:
 
 ```
-openssl
+# openssl
 echo -n "password" | openssl sha1
 
 # shasum
