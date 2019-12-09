@@ -16,39 +16,45 @@
 
 import base64
 import json
-from webapp2_extras import security
+from functools import wraps
+from hashlib import sha1
 
 
-def basic_auth(func):
-    """
-    Decorator to require HTTP auth for request handler
-    """
-    def callf(handler, *args, **kwargs):
+def basic_auth(f):
+    @wraps(f)
+    def new_f(*args):
+        handler = args[0]
+
         auth_header = handler.request.headers.get('Authorization')
         if auth_header is None:
-            __basic_login(handler)
-        else:
-            (username, password) = base64.b64decode(auth_header.split(' ')[1]).split(':')
-            if __basic_lookup(username) == __basic_hash(password):
-                return func(handler, *args, **kwargs)
-            else:
-                __basic_login(handler)
+            return __basic_login(handler)
+        if not auth_header.startswith('Basic '):
+            return __basic_login(handler)
 
-    return callf
+        (username, password) = base64.b64decode(auth_header.split(' ')[1]).split(':')
+
+        if auth(username, password):
+            f(*args)
+        else:
+            __basic_login(handler)
+
+    return new_f
+
 
 
 def __basic_login(handler):
-    handler.response.set_status(401, message="Authorization Required")
-    handler.response.headers['WWW-Authenticate'] = 'Basic realm="Secure Area"'
+    handler.set_header('WWW-Authenticate', 'Basic realm="Secure Area"')
+    handler.set_status(401)
+    handler.finish()
+    return False
 
 
-def __basic_lookup(username):
+def auth(username, password):
     with open('config.json') as data_file:
         config = json.load(data_file)
-    for account in config["accounts"]:
-        if account['username'] == username:
-            return account['password']
 
+    if username in config["accounts"]:
+        account = config["accounts"][username]
+        return account["password"] == sha1(password.encode('utf-8')).hexdigest()
 
-def __basic_hash(password):
-    return security.hash_password(password, method='sha1')
+    return False

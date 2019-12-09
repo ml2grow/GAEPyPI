@@ -15,9 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import jinja2
+from tornado import template
 
-__templates__ = jinja2.Environment(loader=jinja2.FileSystemLoader(
-    os.path.join(os.path.dirname(__file__), 'templates')),
-    extensions=['jinja2.ext.autoescape'],
-    autoescape=True)
+
+__templates__ = template.Loader(os.path.join(os.path.dirname(__file__), 'templates'))

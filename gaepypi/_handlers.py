@@ -19,13 +19,13 @@ from .package import Package, PackageIndex
 from .exceptions import GAEPyPIError
 
 import os
-import webapp2
+from tornado import web
 from cloudstorage import NotFoundError
-from _decorators import basic_auth
+from ._decorators import basic_auth
 from google.appengine.api import app_identity
 
 
-class BaseHandler(webapp2.RequestHandler):
+class BaseHandler(web.RequestHandler):
     """
     Basic handler class for our GAE webapp2 application
     """
@@ -34,7 +34,7 @@ class BaseHandler(webapp2.RequestHandler):
         self.response.write('<html><body>{}</body></html>'.format(body))
 
     def write404(self):
-        self.response.set_status(404)
+        self.set_status(404)
         self.write_page('<h1>Not found</h1>')
 
     def get_storage(self):
@@ -54,12 +54,11 @@ class IndexHandler(BaseHandler):
 
     @basic_auth
     def post(self):
-        name = self.request.get('name', default_value=None)
-        version = self.request.get('version', default_value=None)
-        action = self.request.get(':action', default_value=None)
-        upload = self.request.POST.getall('content')[0]
-        content = upload.file.read()
-        filename = upload.filename
+        name = self.get_argument('name')
+        version = self.get_argument('version')
+        action = self.get_argument(':action')
+        content = self.request.files['content'][0]['body']
+        filename = self.request.files['content'][0]['filename']
 
         if name and version and content and action == 'file_upload':
             try:
@@ -144,14 +143,16 @@ class PackageDownload(BaseHandler):
     Handles /packages/package/version/filename
     """
 
+    def prepare(self):
+        self.set_header("Content-Type", 'application/octet-stream')
+
     @basic_auth
     def get(self, name, version, filename):
         try:
             package = Package(self.get_storage(), name, version)
             with package.get_file(filename) as gcs_file:
-                self.response.content_type = 'application/octet-stream'
-                self.response.headers.add('Content-Disposition', 'attachment; filename={0}'.format(filename))
-                self.response.write(gcs_file.read())
+                self.set_header('Content-Disposition', 'attachment; filename={0}'.format(filename))
+                self.write(gcs_file.read())
         except NotFoundError:
             self.write404()
 

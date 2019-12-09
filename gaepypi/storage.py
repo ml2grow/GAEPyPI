@@ -18,8 +18,7 @@ from .package import PackageIndex
 from .templates import __templates__
 from .renderable import Renderable
 
-import six
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 import cloudstorage as gcs
 
 my_default_retry_params = gcs.RetryParams(initial_delay=0.2,
@@ -29,7 +28,6 @@ my_default_retry_params = gcs.RetryParams(initial_delay=0.2,
 gcs.set_default_retry_params(my_default_retry_params)
 
 
-@six.add_metaclass(ABCMeta)
 class Storage(Renderable):
     """
     Storage abstract class, describing the interface assumed by the Package/PackageIndex classes
@@ -107,8 +105,8 @@ class Storage(Renderable):
         """
         package_indices = PackageIndex.get_all(self)
         template_file = 'storage-index.html.j2' if not full_index else 'package-index.html.j2'
-        template = __templates__.get_template(template_file)
-        return template.render({'indices': package_indices})
+        template = __templates__.load(template_file)
+        return template.generate({'indices': package_indices})
 
 
 class GCStorage(Storage):

@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-runtime: python27
+runtime: python37
 api_version: 1
 threadsafe: yes
 
@@ -27,8 +27,6 @@ handlers:
   script: gaepypi.app
 
 libraries:
-- name: webapp2
-  version: latest
 - name: jinja2
   version: latest
 - name: six

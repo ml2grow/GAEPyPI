@@ -19,7 +19,6 @@ class TestGCSStorage(unittest.TestCase):
     def test_packages_path(self):
         assert self.s.get_packages_path() == '/mybucket/packages'
 
-
     def test_package_path(self):
         assert self.s.get_package_path('dummy') == '/mybucket/packages/dummy'
         assert self.s.get_package_path('dummy', '0.0.1') == '/mybucket/packages/dummy/0.0.1'

@@ -18,12 +18,10 @@ from .exceptions import GAEPyPIError
 from .templates import __templates__
 from .renderable import Renderable
 
-import six
 from contextlib import contextmanager
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 
 
-@six.add_metaclass(ABCMeta)
 class BucketObject(Renderable):
     def __init__(self, storage, *args, **kwargs):
         super(BucketObject, self).__init__(*args, **kwargs)

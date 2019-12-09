@@ -16,16 +16,31 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import webapp2
-from _handlers import *
+import os
+from tornado import web
+from tornado import wsgi
+from ._handlers import *
+from .templates import __templates__
 
-app = webapp2.WSGIApplication([
-    ('/', IndexHandler),
-    ('/pypi/', PypiHandler),
-    ('/pypi/([^/]+)/', PypiPackageHandler),
-    ('/pypi/([^/]+)/([^/]+)', PackageVersionHandler),
-    ('/packages', PackageBase),
-    ('/packages/([^/]+)', PackageList),
-    ('/packages/([^/]+)/([^/]+)', PackageVersionHandler),
-    ('/packages/([^/]+)/([^/]+)/(.+)', PackageDownload)
-], debug=True)
+
+settings = {
+    'template_loader': __templates__
+}
+
+
+class Application(web.Application):
+    def __init__(self):
+        routes = [
+            ('/', IndexHandler),
+            ('/pypi/', PypiHandler),
+            ('/pypi/([^/]+)/', PypiPackageHandler),
+            ('/pypi/([^/]+)/([^/]+)', PackageVersionHandler),
+            ('/packages', PackageBase),
+            ('/packages/([^/]+)', PackageList),
+            ('/packages/([^/]+)/([^/]+)', PackageVersionHandler),
+            ('/packages/([^/]+)/([^/]+)/(.+)', PackageDownload)
+        ]
+        super(Application, self).__init__(routes, **settings)
+
+
+app = wsgi.WSGIAdapter(Application())
