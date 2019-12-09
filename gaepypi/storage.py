@@ -149,8 +149,9 @@ class GCStorage(Storage):
         gcs_file.close()
 
     def file_exists(self, path):
-        match = list(gcs.listbucket(path.rstrip('/'), delimiter='/'))
-        return len(match) == 1 and not match[0].is_dir
+        match = list(gcs.listbucket(path.rstrip('/')))
+        return path.rstrip('/') in [stat.filename for stat in match]
 
     def path_exists(self, path):
-        return len(list(gcs.listbucket(path.rstrip('/'), delimiter='/'))) == 1
+        match = list(gcs.listbucket(path.rstrip('/'), delimiter='/'))
+        return path.rstrip('/') in [stat.filename.rstrip('/') for stat in match]

@@ -1,0 +1,32 @@
+image: python:2.7
+
+stages:
+  - test
+  - deploy
+
+test:
+  stage: test
+  script: 
+  - pip install -U nox-automation
+  - nox
+  
+deploy_production:
+  stage: deploy
+  only:
+    - master
+  before_script:
+    - echo "deb http://packages.cloud.google.com/apt cloud-sdk-jessie main" | tee /etc/apt/sources.list.d/google-cloud-sdk.list
+    - curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+    - apt-get update && apt-get install -y google-cloud-sdk
+  script:
+    - pip install -U -t libs -r requirements-app.txt
+    - echo $DEPLOY_KEY_FILE_PRODUCTION > /tmp/$CI_PIPELINE_ID.json
+    - gcloud auth activate-service-account --key-file /tmp/$CI_PIPELINE_ID.json
+    - echo $ML2GROW_HTTP_AUTH > config.json
+    - cat config.json
+    - gcloud --verbosity=info --quiet --project $PROJECT_ID_PRODUCTION app deploy app.yaml
+  after_script:
+    - rm /tmp/$CI_PIPELINE_ID.json
+
+    
+

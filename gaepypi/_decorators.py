@@ -20,26 +20,34 @@ from functools import wraps
 from hashlib import sha1
 
 
-def basic_auth(f):
-    @wraps(f)
-    def new_f(*args):
-        handler = args[0]
+def basic_auth(required_roles=None):
+    """
+    Decorator to require HTTP auth for request handler
+    """
+    def decorator_basic_auth(func):
+        @wraps(func)
+        def callf(handler, *args, **kwargs):
+            auth_header = handler.request.headers.get('Authorization')
+            if auth_header is None:
+                return __basic_login(handler)
+            if not auth_header.startswith('Basic '):
+                return __basic_login(handler)
 
-        auth_header = handler.request.headers.get('Authorization')
-        if auth_header is None:
-            return __basic_login(handler)
-        if not auth_header.startswith('Basic '):
-            return __basic_login(handler)
+            (username, password) = base64.b64decode(auth_header.split(' ')[1]).split(':')
+            account = __basic_lookup(username)
 
-        (username, password) = base64.b64decode(auth_header.split(' ')[1]).split(':')
+            # Return 401 Unauthorized if user did not specify credentials or password is mismatched
+            if not account or account["password"] != __basic_hash(password):
+                return __basic_login(handler)
 
-        if auth(username, password):
-            f(*args)
-        else:
-            __basic_login(handler)
+            # Return 403 Forbidden if user's account does not have any of the required access roles
+            user_roles = account['roles'] if 'roles' in account else []
+            if required_roles and any([(required_role not in user_roles) for required_role in required_roles]):
+                return __basic_forbidden(handler)
 
-    return new_f
-
+            return func(handler, *args, **kwargs)
+        return callf
+    return decorator_basic_auth
 
 
 def __basic_login(handler):
@@ -49,12 +57,17 @@ def __basic_login(handler):
     return False
 
 
-def auth(username, password):
+def __basic_hash(password):
+    return sha1(password.encode('utf-8')).hexdigest()
+
+
+def __basic_lookup(username):
     with open('config.json') as data_file:
         config = json.load(data_file)
+    return config["accounts"].get(username, None)
 
-    if username in config["accounts"]:
-        account = config["accounts"][username]
-        return account["password"] == sha1(password.encode('utf-8')).hexdigest()
 
-    return False
+def __basic_forbidden(handler):
+    handler.set_status(403, message="Forbidden")
+
+
