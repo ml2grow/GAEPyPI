@@ -37,15 +37,16 @@ class TestGCSStorage(unittest.TestCase):
     def test_file_exists(self, mock):
         m = Mock()
         type(m).is_dir = PropertyMock(return_value=False)
+        type(m).filename = PropertyMock(return_value='/mybucket/file.txt')
         mock.return_value = [m]
         assert self.s.file_exists('/mybucket/file.txt')
-        mock.assert_called_with('/mybucket/file.txt', delimiter='/')
+        mock.assert_called_with('/mybucket/file.txt')
 
     @patch('gaepypi.storage.gcs.listbucket')
     def test_file_not_exists(self, mock):
         mock.return_value = []
         assert not self.s.file_exists('/mybucket/file.txt')
-        mock.assert_called_with('/mybucket/file.txt', delimiter='/')
+        mock.assert_called_with('/mybucket/file.txt')
 
     @patch('gaepypi.storage.gcs.listbucket')
     def test_file_is_dir(self, mock):
@@ -53,12 +54,13 @@ class TestGCSStorage(unittest.TestCase):
         type(m).is_dir = PropertyMock(return_value=True)
         mock.return_value = [m]
         assert not self.s.file_exists('/mybucket/file')
-        mock.assert_called_with('/mybucket/file', delimiter='/')
+        mock.assert_called_with('/mybucket/file')
 
     @patch('gaepypi.storage.gcs.listbucket')
     def test_path_is_dir(self, mock):
         m = Mock()
         type(m).is_dir = PropertyMock(return_value=True)
+        type(m).filename = PropertyMock(return_value='/mybucket/file')
         mock.return_value = [m]
         assert self.s.path_exists('/mybucket/file')
         mock.assert_called_with('/mybucket/file', delimiter='/')
@@ -67,6 +69,7 @@ class TestGCSStorage(unittest.TestCase):
     def test_path_exists(self, mock):
         m = Mock()
         type(m).is_dir = PropertyMock(return_value=False)
+        type(m).filename = PropertyMock(return_value='/mybucket/file.txt')
         mock.return_value = [m]
         assert self.s.path_exists('/mybucket/file.txt')
         mock.assert_called_with('/mybucket/file.txt', delimiter='/')
