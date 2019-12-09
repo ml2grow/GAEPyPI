@@ -1,8 +1,13 @@
 {
   "accounts": [
     {
-      "username": "user",
+      "username": "read_only_user",
       "password": "password"
+    },
+    {
+      "username": "read_write_user",
+      "password": "password",
+      "roles": ["write"]
     }
   ]
 }

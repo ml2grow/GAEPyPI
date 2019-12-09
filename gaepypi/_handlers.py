@@ -19,13 +19,13 @@ from .package import Package, PackageIndex
 from .exceptions import GAEPyPIError
 
 import os
-import webapp2
+from tornado import web
 from cloudstorage import NotFoundError
-from _decorators import basic_auth
+from ._decorators import basic_auth
 from google.appengine.api import app_identity
 
 
-class BaseHandler(webapp2.RequestHandler):
+class BaseHandler(web.RequestHandler):
     """
     Basic handler class for our GAE webapp2 application
     """
@@ -47,12 +47,11 @@ class IndexHandler(BaseHandler):
     """
     Handles /
     """
-
     @basic_auth
     def get(self):
         self.write_page('<a href="/packages">packages</a>')
 
-    @basic_auth
+    @basic_auth(required_roles=['write'])
     def post(self):
         name = self.request.get('name', default_value=None)
         version = self.request.get('version', default_value=None)
@@ -136,6 +135,7 @@ class PackageList(BaseHandler):
         index = PackageIndex(self.get_storage(), package)
         if not index.exists():
             self.write404()
+            return
         self.write_page(index.to_html(full_index=False))
 
 

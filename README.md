@@ -6,7 +6,7 @@ This application runs on Google App Engine (and uses webapp2 instead of tornado)
 2. Downloading by package (or package and version)
 3. A / page that is navigatable with a web browser
 4. /pypi/ listing
-5. Basic ACL through http auth
+5. Basic ACL through http auth with optional account roles (read/write)
 6. Prevent overwriting a package with the same name & version
 
 Unsupported are: 
@@ -21,6 +21,16 @@ Next, have a look at config.json, you can set up multiple accounts for the http 
 ```python
 from webapp2_extras import security
 security.hash_password('password', method='sha1')
+```
+
+Or by using tools like `openssl` or `shasum`:
+
+```
+# openssl
+echo -n "password" | openssl sha1
+
+# shasum
+echo -n "password" | shasum
 ```
 Now, you are ready to deploy to google app engine. Depending on how you set up your projects, this may require adjusting app.yaml, or setting the right project for gcloud. Then:
 ```
