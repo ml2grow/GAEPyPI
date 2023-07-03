@@ -18,6 +18,4 @@ import os
 import jinja2
 
 __templates__ = jinja2.Environment(loader=jinja2.FileSystemLoader(
-    os.path.join(os.path.dirname(__file__), 'templates')),
-    extensions=['jinja2.ext.autoescape'],
-    autoescape=True)
+    os.path.join(os.path.dirname(__file__), 'templates')))

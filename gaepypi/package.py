@@ -79,15 +79,13 @@ class Package(BucketObject):
     def empty(self):
         return len(self.files) == 0
 
-    @contextmanager
     def get_file(self, filename, storage=None):
         if filename not in self.files:
             raise GAEPyPIError("File not found for {0}".format(self))
         storage = self.enquire_storage(storage)
         path = storage.get_package_path(self.name, self.version, filename)
         gcs_file = storage.read(path)
-        yield gcs_file
-        gcs_file.close()
+        return gcs_file
 
     def put_file(self, filename, content, storage=None):
         if filename in self.files:

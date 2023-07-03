@@ -17,6 +17,5 @@
 from .exceptions import GAEPyPIError
 from .package import Package, PackageIndex
 from .storage import Storage, GCStorage
-from .wsgi import app
 
 from ._version import __version__

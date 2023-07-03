@@ -14,59 +14,49 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import base64
 import json
-from functools import wraps
-from webapp2_extras import security
+import hashlib
+from flask import Flask, Response, request
 
 
-def basic_auth(required_roles=None):
-    """
-    Decorator to require HTTP auth for request handler
-    """
-    def decorator_basic_auth(func):
-        def callf(handler, *args, **kwargs):
-            auth_header = handler.request.headers.get('Authorization')
-            if auth_header is None:
-                __basic_login(handler)
-            else:
-                parts = base64.b64decode(auth_header.split(' ')[1]).split(':')
-                username = parts[0]
-                password = ':'.join(parts[1:])
-                account = __basic_lookup(username)
-
-                # Return 401 Unauthorized if user did not specify credentials or password is mismatched
-                if not account or account["password"] != __basic_hash(password):
-                    return __basic_login(handler)
-
-                # Return 403 Forbidden if user's account does not have any of the required access roles
-                user_roles = account['roles'] if 'roles' in account else []
-                if required_roles and any([(required_role not in user_roles) for required_role in required_roles]):
-                    return __basic_forbidden(handler)
-
-                else:
-                    return func(handler, *args, **kwargs)
-
-        return callf
-    return decorator_basic_auth
+def load_accounts():
+	ret = {}
+	with open('config.json') as data_file:
+		config = json.load(data_file)
+	for account in config["accounts"]:
+		ret[account['username']] = account
+	return ret
 
 
-def __basic_login(handler):
-    handler.response.set_status(401, message="Authorization Required")
-    handler.response.headers['WWW-Authenticate'] = 'Basic realm="Secure Area"'
-
-
-def __basic_forbidden(handler):
-    handler.response.set_status(403, message="Forbidden")
-
-
-def __basic_lookup(username):
-    with open('config.json') as data_file:
-        config = json.load(data_file)
-    for account in config["accounts"]:
-        if account['username'] == username:
-            return account
+account_by_name = load_accounts()
 
 
 def __basic_hash(password):
-    return security.hash_password(password, method='sha1')
+	m = hashlib.sha1()
+	m.update(password.encode('utf-8'))
+	return m.hexdigest()
+
+
+def valid_credentials(username, password, required_roles=None):
+	account = account_by_name.get(username)
+	if not account or account["password"] != __basic_hash(password):
+		return False
+	user_roles = account.get('roles', [])
+	if required_roles and any([(required_role not in user_roles) for required_role in required_roles]):
+		return False
+	return True
+
+
+def basic_auth(required_roles=None):
+	def inner_decorator(f):
+		def wrapped(*args, **kwargs):
+			auth = request.authorization
+			if not auth or not auth.username or not auth.password:
+				return Response('Login!', 401, {'WWW-Authenticate': 'Basic realm="Secure Area"'})
+			if not valid_credentials(auth.username, auth.password, required_roles):
+				return Response('Forbidden', 403)
+			return f(*args, **kwargs)
+		wrapped.__name__ = f.__name__
+		return wrapped
+	return inner_decorator
+

@@ -20,13 +20,16 @@ from .renderable import Renderable
 
 import six
 from abc import ABCMeta, abstractmethod
-import cloudstorage as gcs
+from google.cloud import storage
+from io import BytesIO
 
-my_default_retry_params = gcs.RetryParams(initial_delay=0.2,
-                                          max_delay=5.0,
-                                          backoff_factor=2,
-                                          max_retry_period=15)
-gcs.set_default_retry_params(my_default_retry_params)
+storage_client = storage.Client()
+
+
+def to_bucket_and_path(p):
+	segments = p.lstrip('/').split('/')
+	bucket_path = '/'.join(segments[1:])
+	return segments[0], bucket_path
 
 
 @six.add_metaclass(ABCMeta)
@@ -138,22 +141,48 @@ class GCStorage(Storage):
         return dict(zip(components, segments))
 
     def ls(self, path, dir_only=False):
-        padded = path if path[-1] == '/' else path+'/'
-        return [f.filename for f in gcs.listbucket(padded, delimiter='/') if f.is_dir or not dir_only]
+        padded = path if path[-1] == '/' else path + '/'
+        _, bucket_path = to_bucket_and_path(padded)
+        blobs = storage_client.list_blobs(self.bucket, prefix=bucket_path, delimiter='/')
+
+        ret = []
+        for blob in blobs:
+            ret.append(self._legacy_path(blob.name))
+
+        if dir_only:
+            ret = []
+            for p in blobs.prefixes:
+                ret.append(self._legacy_path(p))
+        return ret
+
+    def _legacy_path(self, p):
+        return '/' + self.bucket + '/' + p
 
     def read(self, path):
-        return gcs.open(path)
+        _, bucket_path = to_bucket_and_path(path)
+        bucket = storage_client.bucket(self.bucket)
+        blob = bucket.blob(bucket_path)
+        file_obj = BytesIO()
+        blob.download_to_file(file_obj)
+        file_obj.seek(0)
+        return file_obj
 
     def write(self, path, content):
-        write_retry_params = gcs.RetryParams(backoff_factor=1.1)
-        gcs_file = gcs.open(path, 'w', options={'x-goog-acl': self.acl}, retry_params=write_retry_params)
-        gcs_file.write(content)
-        gcs_file.close()
+        _, bucket_path = to_bucket_and_path(path)
+        bucket = storage_client.bucket(self.bucket)
+        blob = bucket.blob(bucket_path)
+        blob.upload_from_file(file_obj=content)
 
     def file_exists(self, path):
-        match = list(gcs.listbucket(path.rstrip('/')))
-        return path.rstrip('/') in [stat.filename for stat in match]
+        _, bucket_path = to_bucket_and_path(path)
+        bucket = storage_client.bucket(self.bucket)
+        blob = bucket.blob(bucket_path)
+        return blob.exists()
 
     def path_exists(self, path):
-        match = list(gcs.listbucket(path.rstrip('/'), delimiter='/'))
-        return path.rstrip('/') in [stat.filename.rstrip('/') for stat in match]
+        _, bucket_path = to_bucket_and_path(path)
+        blobs = storage_client.list_blobs(self.bucket, prefix=bucket_path, delimiter='/')
+        ret = {}
+        for blob in blobs:
+            ret.add(blob.name)
+        return bucket_path in ret or (bucket_path + '/') in blobs.prefixes
